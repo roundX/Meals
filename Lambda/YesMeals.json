@@ -1,0 +1,226 @@
+[
+    {
+        "color": "#f2c744",
+        "blocks": [
+            {
+                "type": "section",
+                "text": {
+                    "type": "plain_text",
+                    "text": "Mealsに参加しますか？",
+                    "emoji": true
+                }
+            },
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "radio_buttons",
+                        "options": [
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "Yes!",
+                                    "emoji": true
+                                },
+                                "value": "yes"
+                            }
+                        ],
+                        "action_id": "actionId-yesno"
+                    }
+                ]
+            },
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "plain_text",
+                    "text": "ゲスト分はいくつ必要ですか:family:？",
+                    "emoji": true
+                }
+            },
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "static_select",
+                        "placeholder": {
+                            "type": "plain_text",
+                            "text": "0",
+                            "emoji": true
+                        },
+                        "options": [
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "0",
+                                    "emoji": true
+                                },
+                                "value": "0person"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "１つ",
+                                    "emoji": true
+                                },
+                                "value": "1person"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "２つ",
+                                    "emoji": true
+                                },
+                                "value": "2persons"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "３つ",
+                                    "emoji": true
+                                },
+                                "value": "3persons"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "4つ",
+                                    "emoji": true
+                                },
+                                "value": "4persons"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "5つ以上",
+                                    "emoji": true
+                                },
+                                "value": "5ormore"
+                            }
+                        ],
+                        "action_id": "actionId-3"
+                    }
+                ]
+            },
+            {
+                "type": "divider"
+            },
+            {
+                "type": "section",
+                "text": {
+                    "type": "plain_text",
+                    "text": "ちなみに今日の気分は・・・:ghost:",
+                    "emoji": true
+                }
+            },
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "static_select",
+                        "placeholder": {
+                            "type": "plain_text",
+                            "text": "なんでもいいよ！",
+                            "emoji": true
+                        },
+                        "options": [
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "なんでもいいよ！",
+                                    "emoji": true
+                                },
+                                "value": "allok"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "サンドイッチ",
+                                    "emoji": true
+                                },
+                                "value": "sandwich"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "ハンバーガー",
+                                    "emoji": true
+                                },
+                                "value": "hamburger"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "カレー",
+                                    "emoji": true
+                                },
+                                "value": "curry"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "パスタ",
+                                    "emoji": true
+                                },
+                                "value": "pasta"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "中華",
+                                    "emoji": true
+                                },
+                                "value": "Chinese"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "サラダ",
+                                    "emoji": true
+                                },
+                                "value": "salad"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "おすし",
+                                    "emoji": true
+                                },
+                                "value": "osushi"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "たんぱく質",
+                                    "emoji": true
+                                },
+                                "value": "protein"
+                            }
+                        ],
+                        "action_id": "actionId-4"
+                    }
+                ]
+            },
+            {
+                "type": "divider"
+            },
+            {
+                "type": "actions",
+                "elements": [
+                    {
+                        "type": "button",
+                        "text": {
+                            "type": "plain_text",
+                            "text": "決定！",
+                            "emoji": true
+                        },
+                        "value": "select",
+                        "action_id": "action_id-select"
+                    }
+                ]
+            }
+        ]
+    }
+]

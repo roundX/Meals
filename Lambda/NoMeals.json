@@ -1,0 +1,15 @@
+[
+    {
+        "color": "danger",
+        "blocks":[
+    		{
+    			"type": "section",
+    			"text": {
+    				"type": "plain_text",
+    				"text": "今日はMEALSなし!",
+    				"emoji": True
+    			}
+    		}
+		]
+	}
+]
