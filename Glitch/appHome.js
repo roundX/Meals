@@ -16,31 +16,56 @@ const updateView = async user => {
   // Intro message -
   let blocks = [
     {
-      type: "section",
-      text: {
-        type: "plain_text",
-        text: "本日のMEALSは・・・",
-        emoji: true
+      "type": "section",
+      "text": {
+        "type": "plain_text",
+        "text": "本日のMealsは・・・",
+        "emoji": true
       }
     },
     {
-      type: "actions",
-      elements: [
+      "type": "actions",
+      "block_id": "KyLo",
+      "elements": [
         {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "あり"
+          "type": "button",
+          "action_id": "yes30_id",
+          "text": {
+            "type": "plain_text",
+            "text": "ありmin30",
+            "emoji": true
           },
-          value: "yes"
+          "value": "yes30"
         },
         {
-          type: "button",
-          text: {
-            type: "plain_text",
-            text: "なし"
+          "type": "button",
+          "action_id": "yes20_id",
+          "text": {
+            "type": "plain_text",
+            "text": "ありmin20",
+            "emoji": true
           },
-          value: "no"
+          "value": "yes20"
+        },
+        {
+          "type": "button",
+          "action_id": "yes10_id",
+          "text": {
+            "type": "plain_text",
+            "text": "ありmin10",
+            "emoji": true
+          },
+          "value": "yes10"
+        },
+        {
+          "type": "button",
+          "action_id": "no_id",
+          "text": {
+            "type": "plain_text",
+            "text": "なし",
+            "emoji": true
+          },
+          "value": "no"
         }
       ]
     }
@@ -206,7 +231,7 @@ const displayHome = async (user, data) => {
     db.push(`/${user}/data[]`, data, true);
   }
 
-  if(user === 'U018DM5NAQ4'){ // Kent
+  if (user === 'U018DM5NAQ4') { // Kent
     const args = {
       token: process.env.SLACK_BOT_TOKEN,
       user_id: user,
@@ -226,7 +251,7 @@ const displayHome = async (user, data) => {
       console.log(e);
     }
 
-  }else if(user === 'UE32RF9SB'){ // Saeko
+  } else if (user === 'UE32RF9SB') { // Saeko
     const args = {
       token: process.env.SLACK_BOT_TOKEN,
       user_id: user,
@@ -246,7 +271,7 @@ const displayHome = async (user, data) => {
       console.log(e);
     }
 
-  }else{
+  } else {
     const args = {
       token: process.env.SLACK_BOT_TOKEN,
       user_id: user,
