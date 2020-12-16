@@ -8,7 +8,7 @@
   "salad": 0,
   "osushi": 0,
   "protein": 0,
-  "staff": 1,
+  "staff": 0,
   "ayaka": 0,
   "ayumu": 0,
   "oki": 0,
@@ -41,5 +41,7 @@
   "yoshi_guest": 0,
   "rina_guest": 0,
   "name_error": 0,
-  "ormore": 0
+  "ormore": 8,
+  "osa": 0,
+  "kent.maruyama": 0
 }

@@ -1,9 +1,4 @@
-import os
-import re
-import json
-import logging
-import datetime
-import boto3
+import os, re, json, logging, datetime, boto3
 import urllib.request
 from urllib.parse import parse_qs
 
@@ -11,23 +6,23 @@ from urllib.parse import parse_qs
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-
 def handle_slack_event(slack_event: dict, context) -> str:
     # 受け取ったイベント情報をCloud Watchログに出力
     logging.info(json.dumps(slack_event))
-    body = parse_qs(slack_event["event"].get('body') or '')  # ペイロードのbody取得
+    body = parse_qs(slack_event["event"].get('body') or '') #ペイロードのbody取得
     json_open = body['payload'][0]
     json_load = json.loads(json_open)
 
     interactiveType = json_load["container"]["type"]
     yesNo = json_load['actions'][0]['value']
 
+
     if interactiveType == "view":   # HomeTabからのペイロード
         # Kent, Ayaka, Minami, Nanae, Nanako, Rina, Henri, Kugi, Masato, Yoshi, Ayumu, Oki, Osa, Sanpei, Saeko
-        # userIDs = ["U018DM5NAQ4", "U0119D0703S", "UU2S7SHSL", "UH8AZEFCJ", "UG4AGRPEW", "UV5J27J8Z", "UD452K55H", "UKRTDTU6P", "UCRU2CRKP", "UCR1Y87KJ", "U010M6ETTGU", "UCS8B84JV", "UDBFZTFN0", "UD41MDCVA", "UE32RF9SB"] # 本番用
+        userIDs = ["U018DM5NAQ4", "U0119D0703S", "UU2S7SHSL", "UH8AZEFCJ", "UG4AGRPEW", "UV5J27J8Z", "UD452K55H", "UKRTDTU6P", "UCRU2CRKP", "UCR1Y87KJ", "U010M6ETTGU", "UCS8B84JV", "UDBFZTFN0", "UD41MDCVA", "UE32RF9SB"] # 本番用
         # userIDs = ["U018DM5NAQ4", "UE32RF9SB", "U018DM5NAQ4", "UE32RF9SB", "U018DM5NAQ4", "UE32RF9SB","U018DM5NAQ4", "UE32RF9SB","U018DM5NAQ4", "UE32RF9SB","U018DM5NAQ4", "UE32RF9SB","U018DM5NAQ4", "UE32RF9SB", "U018DM5NAQ4"] # 管理者大量投稿テスト用
         # userIDs = ["U018DM5NAQ4", "UE32RF9SB"] # 管理者テスト用
-        userIDs = ["U018DM5NAQ4"]  # 管理者テスト用
+        # userIDs = ["U018DM5NAQ4"] # 管理者テスト用
 
         # 値判定でメッセージ切り替え
         # Mealsあり
@@ -39,34 +34,34 @@ def handle_slack_event(slack_event: dict, context) -> str:
             for userID in userIDs:
                 post_message_to_slack(message, userID, "attachments", yesNo)
 
-        elif yesNo == "no":  # Mealsなし
+        elif yesNo == "no": # Mealsなし
             with open('NoMeals.json') as f:
                 data = f.read()
             message = data
 
             for userID in userIDs:
-                post_message_to_slack(
-                    message, userID, "attachmentsAndNo", yesNo)
+                post_message_to_slack(message, userID, "attachmentsAndNo", yesNo)
 
-        elif yesNo == "total":  # 集計結果表示
+        elif yesNo == "total": # 集計結果表示
             # S3の設定
             S3_BUCKET_NAME = "lambda-meals"
             S3_DB_NAME = "Syukei.json"
             S3_client = boto3.client('s3')
 
-            # DBから情報取得(集計)
-            response = S3_client.get_object(
-                Bucket=S3_BUCKET_NAME, Key=S3_DB_NAME)
+            #DBから情報取得(集計)
+            response = S3_client.get_object(Bucket=S3_BUCKET_NAME, Key=S3_DB_NAME)
             data = json.loads(response["Body"].read())
 
             message = aggregate(data)
             cleanJson = json_0(data)
 
-            for userID in userIDs:
-                post_message_to_slack(message, userID, "aggregate", yesNo)
+            for userID in userIDs: # 受付終了通知
+                post_message_to_slack(message, userID, "confirm", yesNo)
 
-            S3_client.put_object(Body=json.dumps(
-                data, indent=4), Bucket=S3_BUCKET_NAME, Key=S3_DB_NAME)
+            post_message_to_slack(message, "U018DM5NAQ4", "aggregate", yesNo) # Kent
+            post_message_to_slack(message, "UE32RF9SB", "aggregate", yesNo) # Saeko
+
+            S3_client.put_object(Body=json.dumps(cleanJson, indent=4), Bucket=S3_BUCKET_NAME, Key=S3_DB_NAME)
 
         else:
             with open('NoMeals.json') as f:
@@ -74,34 +69,34 @@ def handle_slack_event(slack_event: dict, context) -> str:
             message = data
 
             for userID in userIDs:
-                post_message_to_slack(
-                    message, userID, "attachmentsAndNo", yesNo)
+                post_message_to_slack(message, userID, "attachmentsAndNo", yesNo)
 
-    elif interactiveType == "message_attachment":  # channelからのペイロード
+    elif interactiveType == "message_attachment" or interactiveType == "message": # channelからのペイロード
         username = json_load["user"]["username"]
         jsonDict = json_load["state"]["values"]
         jsonDecision = json_load["actions"][0]["action_id"]
 
         # forを使うのは、jsonの中身がいつも違う順番で来る為
         jsonList = list(jsonDict.values())
-        for i in [0, 1, 2, 3]:  # ゲストの数
+        for i in [0,1,2,3]: # ゲストの数
             try:
                 guest = jsonList[i]["actionId-3"]["selected_option"]["value"]
                 break
             except:
                 guest = "0"
-        for j in [0, 1, 2, 3]:  # 希望ジャンル
+        for j in [0,1,2,3]: # 希望ジャンル
             try:
                 genre = jsonList[j]["actionId-4"]["selected_option"]["value"]
                 break
             except:
                 genre = "allok"
-        for k in [0, 1, 2, 3]:  # yesかどうか
+        for k in [0,1,2,3]: # yesかどうか
             try:
                 staffs = jsonList[k]["actionId-yesno"]["selected_option"]["value"]
                 break
             except:
                 staffs = "0"
+
 
         # DB更新
         # S3の設定
@@ -109,42 +104,44 @@ def handle_slack_event(slack_event: dict, context) -> str:
         S3_DB_NAME = "Syukei.json"
         S3_client = boto3.client('s3')
 
-        # DBから情報取得(更新の為)
+        #DBから情報取得(更新の為)
         response = S3_client.get_object(Bucket=S3_BUCKET_NAME, Key=S3_DB_NAME)
         data = json.loads(response["Body"].read())
-        data[genre] = add_genre(data, genre)
-        data["guest"] = if_add_guest(data, guest)
-        data["ormore"] = if_add_5moreguest(data, guest)
-        data["staff"] = if_add_a_staff(data, staffs)
 
         staffNum = if_staffname_in(data, username)
         if staffNum == 1000:
             data["name_error"] = data["name_error"] + 1
         else:
-            data[staffNum] = 1
+            if data[staffNum] == 0: # タイムアウトなどの影響で同じ人から2回以上来た場合弾く
+                data[genre] = add_genre(data, genre)
+                data["guest"] = if_add_guest(data, guest)
+                data["ormore"] = if_add_moreguest(data, guest)
+                data["staff"] = if_add_a_staff(data, staffs)
+                data[staffNum] = 1
 
-        guestNum = if_guest_in(guest)
-        userGuest = if_userGuest_in(username)
-        data[userGuest] = data[userGuest] + guestNum
+                guestNum = if_guest_in(guest)
+                userGuest = if_userGuest_in(username)
+                data[userGuest] = data[userGuest] + guestNum
 
-        S3_client.put_object(Body=json.dumps(data, indent=4),
-                             Bucket=S3_BUCKET_NAME, Key=S3_DB_NAME)
+                S3_client.put_object(Body=json.dumps(data, indent=4), Bucket=S3_BUCKET_NAME, Key=S3_DB_NAME)
 
-        message = username + "/" + guest + "/" + genre
+        message =  username + "/" + guest + "/" + genre
 
         if jsonDecision == "action_id-select":
             responseURL = json_load["response_url"]
             responseButton(responseURL)
 
-            post_message_to_slack(message, "U018DM5NAQ4",
-                                  "text", yesNo)  # Kent
-            # post_message_to_slack(message, "UE32RF9SB", "text", yesNo) # Saeko
+            post_message_to_slack(message, "U018DM5NAQ4", "text", yesNo) # Kent
+            post_message_to_slack(message, "UE32RF9SB", "text", yesNo) # Saeko
 
     else:   # 例外処理
         with open('NoMeals.json') as f:
             data = f.read()
             message = data
-        post_message_to_slack(message, "UE32RF9SB", "attachmentsAndNo", yesNo)
+            print(interactiveType)
+
+        post_message_to_slack(message, "UE32RF9SB", "attachmentsAndNo", yesNo) # saeko
+        post_message_to_slack(message, "U018DM5NAQ4", "attachmentsAndNo", yesNo) # kent
 
     # メッセージの投稿とは別に、Event APIによるリクエストの結果として
     # Slackに何かしらのレスポンスを返す必要があるのでOKと返す
@@ -152,8 +149,6 @@ def handle_slack_event(slack_event: dict, context) -> str:
     return "OK"
 
 # Slackへの投稿
-
-
 def post_message_to_slack(message: str, channel: str, kind: str, min: str):
     # Slackのchat.postMessage APIを利用して投稿する
     # ヘッダーにはコンテンツタイプとボット認証トークンを付与する
@@ -163,7 +158,7 @@ def post_message_to_slack(message: str, channel: str, kind: str, min: str):
         "Authorization": "Bearer {0}".format(os.environ["SLACK_BOT_USER_ACCESS_TOKEN"])
     }
 
-    if kind == "attachments":  # Homeタブから全員へ
+    if kind == "attachments": # Homeタブから全員へ
         date = datetime.date.today()
         deadline = getDeadline(min)
         data = {
@@ -173,7 +168,7 @@ def post_message_to_slack(message: str, channel: str, kind: str, min: str):
             "attachments": message,
             "username": "Bot-Sample"
         }
-    elif kind == 'text':  # Channelから管理者へ
+    elif kind == 'text': # Channelから管理者へ
         data = {
             "token": os.environ["SLACK_APP_AUTH_TOKEN"],
             "channel": "@" + channel,
@@ -196,16 +191,20 @@ def post_message_to_slack(message: str, channel: str, kind: str, min: str):
             "text": "*集計結果*\n" + message,
             "username": "Bot-Sample"
         }
+    elif kind == "confirm":
+        data = {
+            "token": os.environ["SLACK_APP_AUTH_TOKEN"],
+            "channel": "@" + channel,
+            "text": "*受付終了*\n" + "通知の届かなかった方や時間内に間に合わなかった方は、saekoまで直接連絡をお願いします:woman-bowing:",
+            "username": "Bot-Sample"
+        }
 
-    req = urllib.request.Request(url, data=json.dumps(
-        data).encode("utf-8"), method="POST", headers=headers)
+    req = urllib.request.Request(url, data=json.dumps(data).encode("utf-8"), method="POST", headers=headers)
     urllib.request.urlopen(req)
 
     return
 
 # Staffのアクションに対してメッセージを書き換え
-
-
 def responseButton(url: str):
     headers = {
         "Content-Type": "application/json; charset=UTF-8",
@@ -216,15 +215,12 @@ def responseButton(url: str):
         "text": "OK:ok_hand:"
     }
 
-    req = urllib.request.Request(url, data=json.dumps(
-        data).encode("utf-8"), method="POST", headers=headers)
+    req = urllib.request.Request(url, data=json.dumps(data).encode("utf-8"), method="POST", headers=headers)
     urllib.request.urlopen(req)
 
     return
 
 # 締め切りの時間取得
-
-
 def getDeadline(min):
     if min == "yes40":
         td_m = datetime.timedelta(minutes=580)
@@ -243,14 +239,10 @@ def getDeadline(min):
     return dt_m.strftime('%H:%M')
 
 # 各ジャンルのカウント追加
-
-
 def add_genre(fJson, type):
     return fJson[type] + 1
 
 # ゲスト数追加
-
-
 def if_add_guest(fJson, s):
     if '1' in s:
         guest_test = 1
@@ -260,20 +252,26 @@ def if_add_guest(fJson, s):
         guest_test = 3
     elif '4' in s:
         guest_test = 4
+    elif '5' in s:
+        guest_test = 5
+    elif '6' in s:
+        guest_test = 6
+    elif '7' in s:
+        guest_test = 7
     else:
-        guest_test = 0  # 5人以上のときも０にしている
+        guest_test = 0  # 8人以上のときも０にしている
 
     return fJson["guest"] + guest_test
 
 
-# ゲスト5人以上の時の追加
-def if_add_5moreguest(fJson, d):
-    if '5' in d:
-        guest_test_5more = 5
+# ゲスト8人以上の時の追加
+def if_add_moreguest(fJson, d):
+    if '8' in d:
+        guest_more = 8
     else:
-        guest_test_5more = 0
+        guest_more = 0
 
-    return fJson["ormore"] + guest_test_5more
+    return fJson["ormore"] + guest_more
 
 
 # 必要スタッフ数のカウント追加
@@ -320,31 +318,33 @@ def if_staffname_in(fJson, s):
 
         return username_emoji
     except:
-        username_emoji = 1000  # エラーとわかりやすくするため1000にしてる
+        username_emoji = 1000 # エラーとわかりやすくするため1000にしてる
         return username_emoji
 
     return
 
 # ゲスト数を返す
-
-
 def if_guest_in(a):
     if '1' in a:
-        guest_test = 1
+        guestNum = 1
     elif '2' in a:
-        guest_test = 2
+        guestNum = 2
     elif '3' in a:
-        guest_test = 3
+        guestNum = 3
     elif '4' in a:
-        guest_test = 4
+        guestNum = 4
+    elif '5' in a:
+        guestNum = 5
+    elif '6' in a:
+        guestNum = 6
+    elif '7' in a:
+        guestNum = 7
     else:
-        guest_test = 0  # 5人以上のときも０にしている
+        guestNum = 0  # 8人以上のときも０にしている
 
-    return guest_test
+    return guestNum
 
 # どのスタッフのゲストかを返す
-
-
 def if_userGuest_in(b):
     if 'ayaka' in b:
         username_emoji = "ayaka_guest"
@@ -382,8 +382,6 @@ def if_userGuest_in(b):
     return username_emoji
 
 # 集計
-
-
 def aggregate(fJson):
     howmanySandwich = fJson["sandwich"]
     howmanyhamburger = fJson["hamburger"]
@@ -433,90 +431,92 @@ def aggregate(fJson):
     yoshi_guest = fJson["yoshi_guest"]
     rina_guest = fJson["rina_guest"]
 
+
     if ayaka >= 1:
-        ayaka_name = 'ayaka:' + str(ayaka_guest)
+      ayaka_name = 'ayaka:' + str(ayaka_guest)
     elif ayaka == 0:
-        ayaka_name = "-"
+      ayaka_name = "-"
 
     if ayumu >= 1:
-        ayumu_name = 'ayumu:' + str(ayumu_guest)
+       ayumu_name = 'ayumu:' + str(ayumu_guest)
     elif ayumu == 0:
-        ayumu_name = "-"
+      ayumu_name = "-"
 
     if oki >= 1:
-        oki_name = 'oki:' + str(oki_guest)
+      oki_name = 'oki:' + str(oki_guest)
     elif oki == 0:
-        oki_name = "-"
+      oki_name = "-"
 
     if osa >= 1:
-        osa_name = 'osa:' + str(osa_guest)
+      osa_name = 'osa:' + str(osa_guest)
     elif osa == 0:
-        osa_name = "-"
+      osa_name = "-"
 
     if kugi >= 1:
-        kugi_name = 'kugi:' + str(kugi_guest)
+     kugi_name = 'kugi:' + str(kugi_guest)
     elif kugi == 0:
-        kugi_name = "-"
+     kugi_name = "-"
 
     if kent >= 1:
-        kent_name = ':kent:' + str(kent_guest)
+     kent_name = ':kent:' + str(kent_guest)
     elif kent == 0:
-        kent_name = "-"
+      kent_name = "-"
 
     if saeko >= 1:
-        saeko_name = 'saeko:' + str(saeko_guest)
+      saeko_name = 'saeko:' + str(saeko_guest)
     elif saeko == 0:
-        saeko_name = "-"
+     saeko_name = "-"
 
     if sanpei >= 1:
-        sanpei_name = 'sanpei:' + str(sanpei_guest)
+     sanpei_name = 'sanpei:' + str(sanpei_guest)
     elif sanpei == 0:
-        sanpei_name = "-"
+       sanpei_name = "-"
 
     if nanae >= 1:
-        nanae_name = 'nanae:' + str(nanae_guest)
+      nanae_name = 'nanae:' + str(nanae_guest)
     elif nanae == 0:
-        nanae_name = "-"
+      nanae_name = "-"
 
     if nanako >= 1:
-        nanako_name = 'nanako:' + str(nanako_guest)
+      nanako_name = 'nanako:' + str(nanako_guest)
     elif nanako == 0:
-        nanako_name = "-"
+     nanako_name = "-"
 
     if henri >= 1:
-        henri_name = 'henri:' + str(henri_guest)
+      henri_name = 'henri:' + str(henri_guest)
     elif henri == 0:
-        henri_name = "-"
+       henri_name = "-"
 
     if masato >= 1:
-        masato_name = 'masato:' + str(masato_guest)
+      masato_name = 'masato:' + str(masato_guest)
     elif masato == 0:
-        masato_name = "-"
+      masato_name = "-"
 
     if minami >= 1:
-        minami_name = 'minami:' + str(minami_guest)
+      minami_name = 'minami:' + str(minami_guest)
     elif minami == 0:
-        minami_name = "-"
+       minami_name = "-"
 
     if yoshi >= 1:
-        yoshi_name = 'yoshi:' + str(yoshi_guest)
+       yoshi_name = 'yoshi:' + str(yoshi_guest)
     elif yoshi == 0:
-        yoshi_name = "-"
+       yoshi_name = "-"
 
     if rina >= 1:
-        rina_name = 'rina:' + str(rina_guest)
+       rina_name = 'rina:' + str(rina_guest)
     elif rina == 0:
-        rina_name = "-"
+       rina_name = "-"
 
     if name_error >= 1:
-        name_error_name = 'エラーのひとがいるよ！:ghost:'
+       name_error_name = 'エラーのひとがいるよ！:ghost:'
     elif name_error == 0:
-        name_error_name = "-"
+       name_error_name = "-"
 
     if ormore >= 1:
-        ormore_name = '5人以上を選んでいる人がいるよ！:ghost:'
+       ormore_name = '8人以上を選んでいる人がいるよ！:ghost:'
     elif ormore == 0:
-        ormore_name = "-"
+       ormore_name = "-"
+
 
     howmany = "サンドイッチ：" + " *" + str(howmanySandwich) + "*" + "\n"
     howmany += "ハンバーガー：" + " *" + str(howmanyhamburger) + "*" + "\n"
@@ -531,15 +531,13 @@ def aggregate(fJson):
     howmany += "Guest：" + " *" + str(howmanyGuest) + "*" + "\n"
     howmany += ayaka_name + "/" + ayumu_name + "/" + oki_name + "/" + osa_name + "/" + kugi_name + "/" + kent_name + "/" + saeko_name + "/" + sanpei_name + \
         "/" + nanae_name + "/" + nanako_name + "/" + henri_name + "/" + masato_name + \
-        "/" + minami_name + "/" + yoshi_name + "/" + rina_name + "\n" + "\n"
+    "/" + minami_name + "/" + yoshi_name + "/" + rina_name + "\n" + "\n"
     howmany += "Error：" + name_error_name + "\n" + "\n"
-    howmany += "5人以上：" + ormore_name + "\n"
+    howmany += "8人以上：" + ormore_name + "\n"
 
     return howmany
 
 # JSONリセット
-
-
 def json_0(fJson):
     fJson["staff"] = 0
 
@@ -559,7 +557,7 @@ def json_0(fJson):
 
     fJson["ayaka"] = 0
     fJson["ayumu"] = 0
-    fJson["osa"] = 0
+    fJson["osada"] = 0
     fJson["oki"] = 0
     fJson["kugi"] = 0
     fJson["kent"] = 0

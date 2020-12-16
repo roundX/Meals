@@ -94,10 +94,34 @@
                             {
                                 "text": {
                                     "type": "plain_text",
-                                    "text": "5つ以上",
+                                    "text": "5つ",
                                     "emoji": true
                                 },
-                                "value": "5ormore"
+                                "value": "5persons"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "6つ",
+                                    "emoji": true
+                                },
+                                "value": "6persons"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "7つ",
+                                    "emoji": true
+                                },
+                                "value": "7persons"
+                            },
+                            {
+                                "text": {
+                                    "type": "plain_text",
+                                    "text": "8つ以上",
+                                    "emoji": true
+                                },
+                                "value": "8ormore"
                             }
                         ],
                         "action_id": "actionId-3"
